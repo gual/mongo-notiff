@@ -7,12 +7,38 @@ var MongoClient = require('mongodb').MongoClient
 
 var argv = require('minimist')(process.argv.slice(2));
 
-var getParamValueOrDefault = function(key, defaultValue) { return argv[key] ? argv[key] : defaultValue };
+var getParamOrDefault = function(key, defaultVal) { return argv[key] ? argv[key] : defaultVal };
 
-var url = getParamValueOrDefault('connection-string', 'mongodb://localhost:27017');
-var collectionName = getParamValueOrDefault('collection-name', 'test');
-var key = getParamValueOrDefault('key', 'status');
-var value = getParamValueOrDefault('value', 'OK');
+var url = getParamOrDefault('connection-string', 'mongodb://localhost:27017');
+var collectionName = getParamOrDefault('collection-name', 'test');
+var key = getParamOrDefault('key', 'status');
+var value = getParamOrDefault('value', 'OK');
+
+var smtpConf = {
+	host: getParamOrDefault('host', 'smtp.ethereal.email'),
+	port: getParamOrDefault('port', 587),
+	user: argv['user'],
+	pass: argv['pass']
+}
+
+var sendMail = function(transporterConfig, docs) {
+	var transporter = nodemailer.createTransport(transporterConfig);
+
+	let mailOptions = {
+		from: '"Fred Foo 👻" <foo@blurdybloop.com>',
+		to: 'gual23@gmail',
+		subject: 'Hello ✔',
+		text: 'Found ' + docs.length + ' elements',
+	};
+
+	transporter.sendMail(mailOptions, (error, info) => {
+		if (error) {
+			return console.log(error);
+		}
+		console.log('Message sent: %s', info.messageId);
+		// console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+	});
+}
 
 var findDocuments = function(db) {
   var collection = db.collection(collectionName);
@@ -22,32 +48,18 @@ var findDocuments = function(db) {
   collection.find(filterObject).toArray(function(err, docs) {
 	assert.equal(err, null);
 
-	nodemailer.createTestAccount((err, account) => {
-		let transporter = nodemailer.createTransport({
-			host: 'smtp.ethereal.email',
-			port: 587,
-			secure: false,
-			auth: {
-				user: account.user,
-				pass: account.pass
-			}
-		});
+	var transporterConfig = { host: smtpConf.host, port: smtpConf.port, secure: false, auth: { } };
 
-		let mailOptions = {
-			from: '"Fred Foo 👻" <foo@blurdybloop.com>',
-			to: 'gual23@gmail',
-			subject: 'Hello ✔',
-			text: 'Found ' + docs.length + ' elements',
-		};
-
-		transporter.sendMail(mailOptions, (error, info) => {
-			if (error) {
-				return console.log(error);
-			}
-			console.log('Message sent: %s', info.messageId);
-			console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+	if (smtpConf.user && smtpConf.pass) {
+		transporterConfig.auth.user = smtpConf.user;
+		transporterConfig.auth.pass = smtpConf.pass;
+		sendMail(transporterConfig, docs)
+	} else
+		nodemailer.createTestAccount((err, account) => {
+			transporterConfig.auth.user = account.user;
+			transporterConfig.auth.pass = account.pass;
+			sendMail(transporterConfig, docs)
 		});
-	});
   });
 }
 
