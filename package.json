@@ -11,6 +11,6 @@
   "dependencies": {
     "minimist": "^1.2.0",
     "mongodb": "^2.2.31",
-    "nodemailer": "^4.1.0"
+    "node4mailer": "^4.0.3"
   }
 }

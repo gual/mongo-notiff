@@ -1,6 +1,6 @@
 'use strict';
 
-const nodemailer = require('nodemailer');
+const nodemailer = require('node4mailer');
 
 var MongoClient = require('mongodb').MongoClient
   , assert = require('assert');
