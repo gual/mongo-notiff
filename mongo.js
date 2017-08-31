@@ -14,8 +14,7 @@ var collectionName = getParamOrDefault('collection-name', 'test');
 var key = getParamOrDefault('key', 'status');
 var value = getParamOrDefault('value', 'OK');
 
-var sendMail = function(transporterConfig, docs) {
-	console.log(transporterConfig);
+var sendMail = function(transporterConfig, body) {
 	var transporter = nodemailer.createTransport(transporterConfig);
 	var to = getParamOrDefault('to', 'test@test.com');
 
@@ -23,7 +22,7 @@ var sendMail = function(transporterConfig, docs) {
 		from: '"Error reporter" <error@reporter.org>',
 		to: to,
 		subject: 'Error report',
-		text: 'Found ' + docs.length + ' elements',
+		text: body
 	};
 
 	transporter.sendMail(mailOptions, (error, info) => {
@@ -41,6 +40,13 @@ var findDocuments = function(db) {
 
 	collection.find(filterObject).toArray(function(err, docs) {
 		assert.equal(err, null);
+		var body = '';
+
+		for (let doc of docs) {
+			var companyName = doc.sentData.companyName ? doc.sentData.companyName : 'Not found';
+			var id = doc.sentData.id ? doc.sentData.id : 'Not found';
+			body += "Business name: " + companyName + "/" + id + '\n';
+		};
 
 		if (argv['dev']) {
 			//not working on nodev4 package
@@ -54,7 +60,7 @@ var findDocuments = function(db) {
 						pass: account.pass
 					}
 				};
-				sendMail(transConfig, docs);
+				sendMail(transConfig, body);
 			});
 		} else {
 			var transConfig = {
@@ -64,7 +70,7 @@ var findDocuments = function(db) {
 					pass: argv['pass']
 				}
 			};
-			sendMail(transConfig, docs);
+			sendMail(transConfig, body);
 		};
 	});
 };
