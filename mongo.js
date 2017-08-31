@@ -40,14 +40,14 @@ var findDocuments = function(db) {
 
 	collection.find(filterObject).toArray(function(err, docs) {
 		assert.equal(err, null);
-		var body = '';
+		var body = 'Errors reported on: \n';
 
 		for (let doc of docs) {
 			var name = doc.sentData.request.data.companyName
 						? doc.sentData.request.data.companyName
 						: 'Not found';
 			var id = doc.sentData.id ? doc.sentData.id : 'Not found';
-			body += "Business name: " + name + "/" + id + '\n';
+			body += "* " + name + "/" + id + '\n';
 		};
 
 		if (argv['dev']) {
