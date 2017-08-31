@@ -13,6 +13,7 @@ var url = getParamOrDefault('connection-string', 'mongodb://localhost:27017');
 var collectionName = getParamOrDefault('collection-name', 'test');
 var key = getParamOrDefault('key', 'status');
 var value = getParamOrDefault('value', 'OK');
+var to = getParamOrDefault('to', 'test@test.com');
 
 var smtpConf = {
 	host: getParamOrDefault('host', 'smtp.ethereal.email'),
@@ -25,9 +26,9 @@ var sendMail = function(transporterConfig, docs) {
 	var transporter = nodemailer.createTransport(transporterConfig);
 
 	let mailOptions = {
-		from: '"Fred Foo 👻" <foo@blurdybloop.com>',
-		to: 'gual23@gmail',
-		subject: 'Hello ✔',
+		from: '"Error reporter" <error@reporter.org>',
+		to: to,
+		subject: 'Error report',
 		text: 'Found ' + docs.length + ' elements',
 	};
 
@@ -36,9 +37,8 @@ var sendMail = function(transporterConfig, docs) {
 			return console.log(error);
 		}
 		console.log('Message sent: %s', info.messageId);
-		// console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
 	});
-}
+};
 
 var findDocuments = function(db) {
   var collection = db.collection(collectionName);
@@ -61,7 +61,7 @@ var findDocuments = function(db) {
 			sendMail(transporterConfig, docs)
 		});
   });
-}
+};
 
 MongoClient.connect(url, function(err, db) {
 	assert.equal(null, err);
