@@ -43,6 +43,7 @@ var findDocuments = function(db) {
 		assert.equal(err, null);
 
 		if (argv['dev']) {
+			//not working on nodev4 package
 			nodemailer.createTestAccount((err, account) => {
 				var transConfig = {
 					host: 'smtp.ethereal.email',
@@ -57,9 +58,7 @@ var findDocuments = function(db) {
 			});
 		} else {
 			var transConfig = {
-				host: argv['host'],
-				port: argv['port'],
-				secure: false,
+				service: 'Gmail',
 				auth: {
 					user: argv['user'],
 					pass: argv['pass']
