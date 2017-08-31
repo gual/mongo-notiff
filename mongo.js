@@ -43,7 +43,7 @@ var findDocuments = function(db) {
 		var body = '';
 
 		for (let doc of docs) {
-			var companyName = doc.sentData.companyName ? doc.sentData.companyName : 'Not found';
+			var companyName = doc.sentData.request.companyName ? doc.sentData.companyName : 'Not found';
 			var id = doc.sentData.id ? doc.sentData.id : 'Not found';
 			body += "Business name: " + companyName + "/" + id + '\n';
 		};
