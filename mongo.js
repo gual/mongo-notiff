@@ -13,17 +13,11 @@ var url = getParamOrDefault('connection-string', 'mongodb://localhost:27017');
 var collectionName = getParamOrDefault('collection-name', 'test');
 var key = getParamOrDefault('key', 'status');
 var value = getParamOrDefault('value', 'OK');
-var to = getParamOrDefault('to', 'test@test.com');
-
-var smtpConf = {
-	host: getParamOrDefault('host', 'smtp.ethereal.email'),
-	port: getParamOrDefault('port', 587),
-	user: argv['user'],
-	pass: argv['pass']
-}
 
 var sendMail = function(transporterConfig, docs) {
+	console.log(transporterConfig);
 	var transporter = nodemailer.createTransport(transporterConfig);
+	var to = getParamOrDefault('to', 'test@test.com');
 
 	let mailOptions = {
 		from: '"Error reporter" <error@reporter.org>',
@@ -41,26 +35,39 @@ var sendMail = function(transporterConfig, docs) {
 };
 
 var findDocuments = function(db) {
-  var collection = db.collection(collectionName);
-  var filterObject = {};
-  filterObject[key] = value;
+	var collection = db.collection(collectionName);
+	var filterObject = {};
+	filterObject[key] = value;
 
-  collection.find(filterObject).toArray(function(err, docs) {
-	assert.equal(err, null);
+	collection.find(filterObject).toArray(function(err, docs) {
+		assert.equal(err, null);
 
-	var transporterConfig = { host: smtpConf.host, port: smtpConf.port, secure: false, auth: { } };
-
-	if (smtpConf.user && smtpConf.pass) {
-		transporterConfig.auth.user = smtpConf.user;
-		transporterConfig.auth.pass = smtpConf.pass;
-		sendMail(transporterConfig, docs)
-	} else
-		nodemailer.createTestAccount((err, account) => {
-			transporterConfig.auth.user = account.user;
-			transporterConfig.auth.pass = account.pass;
-			sendMail(transporterConfig, docs)
-		});
-  });
+		if (argv['dev']) {
+			nodemailer.createTestAccount((err, account) => {
+				var transConfig = {
+					host: 'smtp.ethereal.email',
+					port: 587,
+					secure: false,
+					auth: {
+						user: account.user,
+						pass: account.pass
+					}
+				};
+				sendMail(transConfig, docs);
+			});
+		} else {
+			var transConfig = {
+				host: argv['host'],
+				port: argv['port'],
+				secure: false,
+				auth: {
+					user: argv['user'],
+					pass: argv['pass']
+				}
+			};
+			sendMail(transConfig, docs);
+		};
+	});
 };
 
 MongoClient.connect(url, function(err, db) {
